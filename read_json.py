@@ -3,6 +3,11 @@
 
 import json
 from aiohttp import web
+import argparse
+
+        
+def normalize(s):
+    return s.strip().lower()
 
 # load the files
 answers = '/Users/narcodeb/Downloads/artists.json'
@@ -26,10 +31,9 @@ for j in ja:
         if len(j['responses']) > 0:
             
             for q in j['responses']: 
-                personDict[jq[q]] = j['responses'][q]
+                personDict[normalize(jq[q])] = j['responses'][q]
         
-        e[id] = personDict
-    
+        e[id] = personDict    
 
 def questionAnswers(questionname, personsdict):
     return [x[questionname] for x in personsdict.values() if questionname in x]
@@ -39,9 +43,9 @@ def rankAnswers(questionName, e, splitby=None):
     l = questionAnswers(questionName, e)
     countDict = {}
     for word in l:
-        w = word.lower().strip()
+        w = normalize(word)
         if splitby != None:
-            tokens = [x.strip() for x in w.split(splitby)]
+            tokens = [normalize(x) for x in w.split(splitby)]
         else:
             tokens = [w]
         
@@ -50,30 +54,32 @@ def rankAnswers(questionName, e, splitby=None):
         
     return countDict
 
-
-
 async def handle_questions_answers(request):
-    name = request.match_info.get('question_name', None)
+    name = normalize(request.match_info.get('question_name', None))
     json = questionAnswers(name, e)
     return web.json_response(json)
 
 async def handle_rank_answers(request):
-    name = request.match_info.get('question_name', None)
-    splitby = request.match_info.get('split_by', None)
+    name = normalize(request.match_info.get('question_name', None))
+    splitby = request.query.get('split_by')
     json = rankAnswers(name, e, splitby)
     return web.json_response(json)
 
 async def handle_root(request):
-    supported_methods = [ "/questions_answers/{question_name}", "/rank/{question_name}/{split_by}" ]
+    supported_methods = [ "/questions_answers/{question_name}", "/rank/{question_name}(?split_by=.)" ]
     return web.json_response(supported_methods)
 
 app = web.Application()
 app.add_routes([web.get('/', handle_root),
                 web.get('/questions_answers/{question_name}', handle_questions_answers),
-                web.get('/rank/{question_name}/{split_by}', handle_rank_answers)])
+                web.get('/rank/{question_name}', handle_rank_answers)])
+
+parser = argparse.ArgumentParser(description='ccu hackathon api')
+parser.add_argument('port', type=int, default=8081, nargs='?')
 
 if __name__ == '__main__':
-    web.run_app(app)
+    args = parser.parse_args()
+    web.run_app(app, port=args.port)
 
 
 #print(rankAnswers('Tools', e, ' '))
