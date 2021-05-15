@@ -1,6 +1,8 @@
+#!/bin/python3
 # read json in
 
 import json
+from aiohttp import web
 
 # load the files
 answers = '/Users/narcodeb/Downloads/artists.json'
@@ -49,6 +51,31 @@ def rankAnswers(questionName, e, splitby=None):
     return countDict
 
 
-print(rankAnswers('Tools', e, ' '))
+
+async def handle_questions_answers(request):
+    name = request.match_info.get('question_name', None)
+    json = questionAnswers(name, e)
+    return web.json_response(json)
+
+async def handle_rank_answers(request):
+    name = request.match_info.get('question_name', None)
+    splitby = request.match_info.get('split_by', None)
+    json = rankAnswers(name, e, splitby)
+    return web.json_response(json)
+
+async def handle_root(request):
+    supported_methods = [ "/questions_answers/{question_name}", "/rank/{question_name}/{split_by}" ]
+    return web.json_response(supported_methods)
+
+app = web.Application()
+app.add_routes([web.get('/', handle_root),
+                web.get('/questions_answers/{question_name}', handle_questions_answers),
+                web.get('/rank/{question_name}/{split_by}', handle_rank_answers)])
+
+if __name__ == '__main__':
+    web.run_app(app)
+
+
+#print(rankAnswers('Tools', e, ' '))
     
     
