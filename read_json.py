@@ -11,7 +11,7 @@ ja = json.load(open(answers))
 # test loading
 # print(jq)
 
-# fuse them in an array
+# fuse them in a Dict
 e = {}
 
 for j in ja:
@@ -28,8 +28,12 @@ for j in ja:
         
         e[id] = personDict
     
+
+def questionAnswers(questionname, personsdict):
+    return [x[questionname] for x in personsdict.values() if questionname in x]
     
 
-
-
+print(questionAnswers('Gender', e))
+    
+    
 
