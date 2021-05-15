@@ -2,13 +2,34 @@
 
 import json
 
+# load the files
 answers = '/Users/narcodeb/Downloads/artists.json'
 questions = '/Users/narcodeb/Downloads/questions_short.json'
-a = open(answers)
-q = open(questions)
+jq = json.load(open(questions))
+ja = json.load(open(answers))
 
-ja = json.load(f)
-jq = json.load(q)
+# test loading
+# print(jq)
+
+# fuse them in an array
+e = {}
+
+for j in ja:
+    personDict = {}
+    id = j['id']
+    personDict['id'] = id
+    
+    if j['branch'] == 'Practitioners and Artists':
+        
+        if len(j['responses']) > 0:
+            
+            for q in j['responses']: 
+                personDict[jq[q]] = j['responses'][q]
+        
+        e[id] = personDict
+    
+    
 
 
-print(j)
+
+
