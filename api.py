@@ -2,7 +2,6 @@
 # read json in
 
 import json
-from aiohttp_middlewares import cors_middleware
 from aiohttp import web
 import argparse
 
@@ -71,17 +70,21 @@ def indexAnswers(keyQuestionName, valueQuestionName, e, splitby=None):
                         index[token].append(value)
     return index
 
+default_headers = {
+    'Access-Control-Allow-Origin': '*'
+}
+
 async def handle_questions_answers(request):
     name = utils.normalize(request.match_info.get('question_name', None))
     filters = request.query.getall('filter', [])
     filtered = apply_filters(parseFilter(filters), e, ',')
     json = questionAnswers(name, filtered)
-    return web.json_response(json)
+    return web.json_response(json, headers=default_headers)
 
 async def handle_answers(request):
     filters = request.query.getall('filter', [])
     filtered = apply_filters(parseFilter(filters), e, ',')
-    return web.json_response(filtered)
+    return web.json_response(filtered, headers=default_headers)
 
 async def handle_rank_answers(request):
     name = utils.normalize(request.match_info.get('question_name', None))
@@ -89,7 +92,7 @@ async def handle_rank_answers(request):
     filtered = apply_filters(parseFilter(filters), e, ',')
     splitby = request.query.get('splitby')
     json = rankAnswers(name, filtered, splitby)
-    return web.json_response(json)
+    return web.json_response(json, headers=default_headers)
 
 async def handle_grouping(request):
     key = utils.normalize(request.match_info.get('key_question_name', None))
@@ -98,7 +101,7 @@ async def handle_grouping(request):
     filtered = apply_filters(parseFilter(filters), e, ',')
     splitby = request.query.get('splitby')
     json = indexAnswers(key, value, filtered, splitby)
-    return web.json_response(json)
+    return web.json_response(json, headers=default_headers)
 
 endpoints = [('/answers', handle_answers, "Returns all answers for all questions."),
              ('/questions_answers/{question_name}', handle_questions_answers, "Returns all answers for a single question."),
@@ -107,12 +110,12 @@ endpoints = [('/answers', handle_answers, "Returns all answers for all questions
 
 async def handle_root(request):
     supported_methods = [{'route': x[0], 'documentation': x[2]} for x in endpoints]
-    return web.json_response(supported_methods)
+    return web.json_response(supported_methods, headers=default_headers)
 
 endpoints.insert(0, ('/', handle_root, "Api root"))
 
 
-app = web.Application(middlewares=[cors_middleware(origins=["*"])])
+app = web.Application()
 app.add_routes([web.get(x[0], x[1]) for x in endpoints])
 
 parser = argparse.ArgumentParser(description='ccu hackathon api')
