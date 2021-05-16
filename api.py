@@ -2,6 +2,7 @@
 # read json in
 
 import json
+from aiohttp_middlewares import cors_middleware
 from aiohttp import web
 import argparse
 
@@ -111,7 +112,7 @@ async def handle_root(request):
 endpoints.insert(0, ('/', handle_root, "Api root"))
 
 
-app = web.Application()
+app = web.Application(middlewares=[cors_middleware(origins=["*"])])
 app.add_routes([web.get(x[0], x[1]) for x in endpoints])
 
 parser = argparse.ArgumentParser(description='ccu hackathon api')
