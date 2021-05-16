@@ -17,9 +17,14 @@ def transform_country(country):
 def transform_residence(residence):
     return transform_country(residence)
 
+def transform_tools(tools_string):
+    split = utils.splitNormalize(tools_string, ',')
+    return split
+
 answer_transformers = {
     'country': transform_country,
     'residence': transform_residence,
+    'tools': transform_tools,
 }
 
 def transform_answer(answer, question):

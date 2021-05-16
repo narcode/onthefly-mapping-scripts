@@ -14,14 +14,16 @@ e = json.load(open(formatted))
 
 def filter(questionName, filter_values, e, splitby=None):
     filtered = {}
-    def answerMatches(resp, values):
+    def answerMatches(resp):
         if resp is None:
             return False
+        elif isinstance(resp, list):
+            return not set(resp).isdisjoint(filter_values)
         else:
             return not set(utils.splitNormalize(resp, splitby)).isdisjoint(filter_values)
 
     for x in e.values():
-        if answerMatches(x.get(questionName, None), filter_values):
+        if answerMatches(x.get(questionName, None)):
             filtered[x['id']] = x
 
     return filtered
@@ -40,7 +42,11 @@ def rankAnswers(questionName, e, splitby=None):
     l = questionAnswers(questionName, e)
     countDict = {}
     for word in l:
-        for token in utils.splitNormalize(word):
+        if isinstance(word, list):
+            tokens = word
+        else:
+            tokens = utils.splitNormalize(word)
+        for token in tokens:
             countDict[token] = countDict.get(token, 0) + 1
 
     return countDict
