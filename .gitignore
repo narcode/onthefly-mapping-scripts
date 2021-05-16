@@ -1,5 +1,6 @@
 # Ignore our data failes 
 *.json
+*.csv
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
