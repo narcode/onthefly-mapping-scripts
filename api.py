@@ -5,42 +5,12 @@ import json
 from aiohttp import web
 import argparse
 
-
-def normalize(s):
-    return s.strip().lower()
-
-def splitNormalize(word, splitby=None):
-    w = normalize(word)
-    if splitby != None:
-        return [normalize(x) for x in w.split(splitby)]
-    else:
-        return [w]
+import utils
 
 # load the files
-answers = 'artists.json'
-questions = 'questions_short.json'
-jq = json.load(open(questions))
-ja = json.load(open(answers))
+formatted = 'formatted.json'
 
-# test loading
-# print(jq)
-
-# fuse them in a Dict
-e = {}
-
-for j in ja:
-    personDict = {}
-    id = j['id']
-    personDict['id'] = id
-
-    if j['branch'] == 'Practitioners and Artists':
-
-        if len(j['responses']) > 0:
-
-            for q in j['responses']:
-                personDict[normalize(jq[q])] = j['responses'][q]
-
-        e[id] = personDict
+e = json.load(open(formatted))
 
 def filter(questionName, filter_values, e, splitby=None):
     filtered = {}
@@ -48,7 +18,7 @@ def filter(questionName, filter_values, e, splitby=None):
         if resp is None:
             return False
         else:
-            return not set(splitNormalize(resp, splitby)).isdisjoint(filter_values)
+            return not set(utils.splitNormalize(resp, splitby)).isdisjoint(filter_values)
 
     for x in e.values():
         if answerMatches(x.get(questionName, None), filter_values):
@@ -70,13 +40,7 @@ def rankAnswers(questionName, e, splitby=None):
     l = questionAnswers(questionName, e)
     countDict = {}
     for word in l:
-        w = normalize(word)
-        if splitby != None:
-            tokens = [normalize(x) for x in w.split(splitby)]
-        else:
-            tokens = [w]
-
-        for token in tokens:
+        for token in utils.splitNormalize(word):
             countDict[token] = countDict.get(token, 0) + 1
 
     return countDict
@@ -91,7 +55,7 @@ def indexAnswers(keyQuestionName, valueQuestionName, e, splitby=None):
     for person in e.values():
         word = person.get(keyQuestionName, None)
         if word:
-            tokens = splitNormalize(word, splitby)
+            tokens = utils.splitNormalize(word, splitby)
             for token in tokens:
                 if not token in index:
                     index[token] = []
@@ -101,7 +65,7 @@ def indexAnswers(keyQuestionName, valueQuestionName, e, splitby=None):
     return index
 
 async def handle_questions_answers(request):
-    name = normalize(request.match_info.get('question_name', None))
+    name = utils.normalize(request.match_info.get('question_name', None))
     filters = request.query.getall('filter', [])
     filtered = apply_filters(parseFilter(filters), e, ',')
     json = questionAnswers(name, filtered)
@@ -113,7 +77,7 @@ async def handle_answers(request):
     return web.json_response(filtered)
 
 async def handle_rank_answers(request):
-    name = normalize(request.match_info.get('question_name', None))
+    name = utils.normalize(request.match_info.get('question_name', None))
     filters = request.query.getall('filter', [])
     filtered = apply_filters(parseFilter(filters), e, ',')
     splitby = request.query.get('splitby')
@@ -121,8 +85,8 @@ async def handle_rank_answers(request):
     return web.json_response(json)
 
 async def handle_grouping(request):
-    key = normalize(request.match_info.get('key_question_name', None))
-    value = normalize(request.match_info.get('value_question_name', None))
+    key = utils.normalize(request.match_info.get('key_question_name', None))
+    value = utils.normalize(request.match_info.get('value_question_name', None))
     filters = request.query.getall('filter', [])
     filtered = apply_filters(parseFilter(filters), e, ',')
     splitby = request.query.get('splitby')
