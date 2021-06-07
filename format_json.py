@@ -41,7 +41,12 @@ ja = json.load(open(answers))
 e = {}
 
 for j in ja:
-    if len(j['responses']) == 0:
+    if isinstance(j['responses'], str):
+        responses = json.loads(j['responses'])
+    else:
+        responses = j['responses']
+
+    if len(responses) == 0:
         continue
     respDict = {}
     id = j['id']
@@ -55,9 +60,9 @@ for j in ja:
         question_names = jiq
     else:
         continue
-    for q in j['responses']:
+    for q in responses:
         question_name = utils.normalize(question_names[q])
-        answer = transform_answer(j['responses'][q], question_name)
+        answer = transform_answer(responses[q], question_name)
         respDict[question_name] = answer
     e[id] = respDict
 
