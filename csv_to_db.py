@@ -9,7 +9,6 @@ import pymysql.cursors
 
 # IO
 file = '/Users/narcodeb/Downloads/ccu_dataset_practitioners.csv'
-output = open('csv_to_import.csv', 'w')
 # Connect to the database
 connection = pymysql.connect(host='localhost',
                              user='onthefly',
